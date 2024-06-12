@@ -4,8 +4,12 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 class PuppeteerBotML {
   async openBrowser() {
-    this.browser = await puppeteer.launch({ headless: false });
+    this.browser = await puppeteer.launch({
+      headless: false,
+      args: ["--start-maximized"],
+    });
     this.page = await this.browser.newPage();
+    await this.page.setViewport({ width: 1920, height: 1080 });
     await this.page.goto("https://www.mercadolivre.com.br/");
   }
 
