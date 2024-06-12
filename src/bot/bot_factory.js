@@ -1,4 +1,4 @@
-import PuppeteerBotML from "./puppeteer_bot_ml";
+import PuppeteerBotML from "./puppeteer_bot_ml.js";
 
 class BotFactory {
   static getBot(marketplace) {

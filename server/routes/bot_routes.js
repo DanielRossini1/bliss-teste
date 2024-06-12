@@ -1,18 +1,23 @@
 import { Router } from "express";
-import ControlRoom from "../../src/central_manager/control_room";
+import ControlRoom from "../../src/central_manager/control_room.js";
+import MarketplaceOrchestrator from "../../src/orchestrator/marketplace_orchestrator.js";
 
 const botRouter = Router();
-const controlRoom = new ControlRoom();
 
 botRouter.post("/start", async (req, res) => {
-  const { productName } = req.body;
+  const { productName, marketplace, actions } = req.body;
 
-  if (!productName) {
-    return res.status(400).send({ error: "Product name is required" });
+  const orchestrator = new MarketplaceOrchestrator();
+  const controlRoom = new ControlRoom(orchestrator);
+
+  if (!productName || !actions || !marketplace) {
+    return res
+      .status(400)
+      .send({ error: "Product name, markeplace and actions are required" });
   }
 
   try {
-    await controlRoom.startAutomation(productName);
+    await controlRoom.startAutomation(marketplace, productName, actions);
     res
       .status(200)
       .send({ message: `Automation started for product: ${productName}` });

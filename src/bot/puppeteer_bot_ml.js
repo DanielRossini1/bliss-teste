@@ -1,91 +1,72 @@
-import { launch } from 'puppeteer';
+import puppeteer from "puppeteer";
 
 class PuppeteerBotML {
-  async execute(productName) {
-    this.browser = await launch({ headless: false });
+  async openBrowser() {
+    this.browser = await puppeteer.launch({ headless: false });
     this.page = await this.browser.newPage();
-    await this.page.goto('https://www.mercadolivre.com.br/');
+    await this.page.goto("https://www.mercadolivre.com.br/");
+  }
 
-    // Search for the product
-		await this.page.type('input[name="as_word"]', productName);
-    await this.page.click('button[type="submit"]');
-    await this.page.waitForSelector('.ui-search-result__image');
-
-    // Click on the first product
-    const productLink = await this.page.$('.ui-search-result__image a');
-    await productLink.click();
-    await this.page.waitForSelector('.andes-button__content');
-    const buyButton = await this.page.$('.andes-button__content');
-    await buyButton.click();
-
-    // Close the browser
+  async closeBrowser() {
     await this.browser.close();
+  }
 
-    const browser = await puppeteer.launch({ headless: false });
-    const page = await browser.newPage();
+  async searchProduct(productName) {
+    await this.page.type('input[name="as_word"]', productName);
+    await this.page.click('button[type="submit"]');
+    await this.page.waitForSelector(".ui-search-layout__item");
+  }
 
-    await page.goto('https://www.mercadolivre.com.br/');
+  async clickFirstProduct() {
+    const productLink = await this.page.$(
+      ".ui-search-layout__item:first-child"
+    );
+    await productLink.click();
+  }
 
-    await page.setViewport({width: 1920, height: 1080});
+  async clickBuyButton() {
+    await this.page.waitForSelector(".andes-button__content");
+    const buyButton = await this.page.$(".andes-button__content");
+    await buyButton.click();
+  }
 
-    await page.type('.nav-search-input', 'pen drive 16gb sandisk');
+  async filterByPrice(minPrice, maxPrice) {
+    await this.page.type("#min-price", minPrice.toString());
+    await this.page.type("#max-price", maxPrice.toString());
+    await this.page.click('button[type="submit"]');
+    await this.page.waitForSelector(".ui-search-result__image");
+  }
 
-    const searchResultSelector = '#cb1-opt1-1';
-    await page.waitForSelector(searchResultSelector);
-    await page.click(searchResultSelector);
+  async addToCart() {
+    await this.page.waitForSelector(".andes-button__content");
+    const addToCartButton = await this.page.$(".andes-button__content");
+    await addToCartButton.click();
+  }
 
-    const filterDropdowButton = '.andes-dropdown__trigger';
-    const ascFilterButton = '[data-key="price_asc"]';
+  async execute(productName, actions) {
+    await this.openBrowser();
+    await this.searchProduct(productName);
 
-    await page.waitForSelector(filterDropdowButton);
-    await page.click(filterDropdowButton);
-
-    const maxRetries = 5;
-
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-            console.log('Esperando...');
-            await page.waitForSelector(ascFilterButton, { timeout: 1000 });
-            console.log('Elemento encontrado!');
-            break;
-        } catch (error) {
-            console.log(`Tentativa ${attempt} falhou. Tentando novamente...`);
-            await page.click(filterDropdowButton);
-            console.log('filter button clicked!');
-        }
-        if (attempt === maxRetries) {
-            console.log('Número máximo de tentativas atingido. Elemento não encontrado.');
-        }
+    for (const action of actions) {
+      switch (action.type) {
+        case "clickFirstProduct":
+          await this.clickFirstProduct();
+          break;
+        case "clickBuyButton":
+          await this.clickBuyButton();
+          break;
+        case "filterByPrice":
+          await this.filterByPrice(action.minPrice, action.maxPrice);
+          break;
+        case "addToCart":
+          await this.addToCart();
+          break;
+        default:
+          console.log(`Action ${action.type} not recognized.`);
+      }
     }
 
-    await page.click(ascFilterButton);
-
-    await page.waitForSelector('.ui-search-layout');
-    const arrayItems = await page.$$('.ui-search-layout .ui-search-layout__item');
-
-    for (const item of arrayItems) {
-        // Obtém o texto do item
-        const itemProps = await page.evaluate(element => {
-            const elementObjectProps = {
-                text: element.querySelector('.ui-search-item__title').innerHTML,
-                rating: element.querySelector('.ui-search-reviews__rating-number')
-                    ? element.querySelector('.ui-search-reviews__rating-number').innerHTML
-                    : null
-            }
-
-            return elementObjectProps;
-        }, item);
-
-        const regexValidator = /^(?=.*\bpen drive\b)(?=.*\b16gb\b)(?=.*\bsandisk\b).*$/;
-
-        if (regexValidator.test(itemProps.text.toLowerCase()) && parseFloat(itemProps.rating) > 4.7) {
-            console.log('Item desejado encontrado! Clicando no item...');
-
-            await item.click();
-
-            break;
-        }
-      }
+    await this.closeBrowser();
   }
 }
 
