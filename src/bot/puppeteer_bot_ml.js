@@ -1,5 +1,7 @@
 import puppeteer from "puppeteer";
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 class PuppeteerBotML {
   async openBrowser() {
     this.browser = await puppeteer.launch({ headless: false });
@@ -34,11 +36,38 @@ class PuppeteerBotML {
     await buyButton.click();
   }
 
+  async clickLoginButton() {
+    await this.page.waitForSelector(".login-link");
+    await this.page.click(".login-link");
+  }
+
+  async setUserEmail() {
+    await this.page.waitForSelector('input[name="user_id"]');
+    await this.page.type(
+      'input[name="user_id"]',
+      "danielrossinirune@gmail.com"
+    );
+    await this.page.click('button[type="submit"]');
+  }
+
   async execute(productName) {
     await this.openBrowser();
+    await sleep(2000);
+
     await this.searchProduct(productName);
+    await sleep(2000);
+
     await this.clickFirstProduct();
+    await sleep(2000);
+
     await this.clickBuyButton();
+    await sleep(2000);
+
+    await this.clickLoginButton();
+    await sleep(2000);
+
+    await this.setUserEmail();
+    await sleep(5000);
 
     await this.closeBrowser();
   }
