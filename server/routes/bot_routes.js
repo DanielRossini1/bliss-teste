@@ -5,19 +5,19 @@ import MarketplaceOrchestrator from "../../src/orchestrator/marketplace_orchestr
 const botRouter = Router();
 
 botRouter.post("/start", async (req, res) => {
-  const { productName, marketplace, actions } = req.body;
+  const { productName, marketplace } = req.body;
 
   const orchestrator = new MarketplaceOrchestrator();
   const controlRoom = new ControlRoom(orchestrator);
 
-  if (!productName || !actions || !marketplace) {
+  if (!productName || !marketplace) {
     return res
       .status(400)
       .send({ error: "Product name, markeplace and actions are required" });
   }
 
   try {
-    await controlRoom.startAutomation(marketplace, productName, actions);
+    await controlRoom.startAutomation(marketplace, productName);
     res
       .status(200)
       .send({ message: `Automation started for product: ${productName}` });

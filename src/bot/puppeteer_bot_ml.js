@@ -25,46 +25,20 @@ class PuppeteerBotML {
   }
 
   async clickBuyButton() {
-    await this.page.waitForSelector(".andes-button__content");
-    const buyButton = await this.page.$(".andes-button__content");
+    await this.page.waitForSelector(
+      "button[formaction='https://www.mercadolivre.com.br/gz/checkout/buy']"
+    );
+    const buyButton = await this.page.$(
+      "button[formaction='https://www.mercadolivre.com.br/gz/checkout/buy']"
+    );
     await buyButton.click();
   }
 
-  async filterByPrice(minPrice, maxPrice) {
-    await this.page.type("#min-price", minPrice.toString());
-    await this.page.type("#max-price", maxPrice.toString());
-    await this.page.click('button[type="submit"]');
-    await this.page.waitForSelector(".ui-search-result__image");
-  }
-
-  async addToCart() {
-    await this.page.waitForSelector(".andes-button__content");
-    const addToCartButton = await this.page.$(".andes-button__content");
-    await addToCartButton.click();
-  }
-
-  async execute(productName, actions) {
+  async execute(productName) {
     await this.openBrowser();
     await this.searchProduct(productName);
-
-    for (const action of actions) {
-      switch (action.type) {
-        case "clickFirstProduct":
-          await this.clickFirstProduct();
-          break;
-        case "clickBuyButton":
-          await this.clickBuyButton();
-          break;
-        case "filterByPrice":
-          await this.filterByPrice(action.minPrice, action.maxPrice);
-          break;
-        case "addToCart":
-          await this.addToCart();
-          break;
-        default:
-          console.log(`Action ${action.type} not recognized.`);
-      }
-    }
+    await this.clickFirstProduct();
+    await this.clickBuyButton();
 
     await this.closeBrowser();
   }
